@@ -5,8 +5,6 @@ from ColumnType import ColumnType
 from Cell import Cell
 from tabulate import tabulate
 
-API_RESULT = "https://www.linkedin.com/in/kareemamin/"
-
 def refreshUI(rowData, columns):
     colValues = []
     rowValues = []
@@ -66,14 +64,14 @@ def runWorkflowForRow(updatedCell, rowData, columns):
             for dep in columns[colId].dependencies:
                 if isinstance(dep, str):
                     stringsToConcatenate.append(dep)
-                elif rowData[dep].apiResult:
-                    stringsToConcatenate.append(rowData[dep].apiResult)
+                elif columns[dep].type == ColumnType.API:
+                    stringsToConcatenate.append(columns[dep].result)
                 else:
-                    stringsToConcatenate.append(rowData[dep].display)
+                    stringsToConcatenate.append(rowData[dep].value)
             newCellVaue = " ".join(stringsToConcatenate)
             rowData[colId] = Cell(colId, " ".join(stringsToConcatenate))
         else:
-            rowData[colId] = Cell(colId, columns[colId].message, API_RESULT)
+            rowData[colId] = Cell(colId, columns[colId].message)
         
         loadingStatusSet = setLoadingStatus(colId, rowData, columns)
         
