@@ -1,9 +1,13 @@
+from BasicColumn import BasicColumn
+from FormulaColumn import FormulaColumn
+from APIColumn import APIColumn
 from ColumnType import ColumnType
 from Cell import Cell
 from tabulate import tabulate
-from constants import columns, API_RESULT
 
-def refreshUI():
+API_RESULT = "https://www.linkedin.com/in/kareemamin/"
+
+def refreshUI(rowData, columns):
     colValues = []
     rowValues = []
 
@@ -19,7 +23,7 @@ def refreshUI():
     print(tabulate([rowValues], headers=colValues))
     print()
 
-def getOrderedColumnDependencies(updatedCell):
+def getOrderedColumnDependencies(updatedCell, columns):
     currColId = updatedCell.colId
     orderedDependencies = []
     found = True
@@ -34,7 +38,7 @@ def getOrderedColumnDependencies(updatedCell):
     return orderedDependencies
 
 # set to loading any API cells that directly depend on current cell
-def setLoadingStatus(currColId):
+def setLoadingStatus(currColId, rowData, columns):
     loadingStatusSet = False
     for colId in columns:
         if columns[colId].type == ColumnType.API and currColId in columns[colId].dependencies:
@@ -42,10 +46,10 @@ def setLoadingStatus(currColId):
             loadingStatusSet = True
     return loadingStatusSet
 
-def runWorkflowForRow(updatedCell):
+def runWorkflowForRow(updatedCell, rowData, columns):
     rowData[updatedCell.colId] = updatedCell
     shouldContinue = True
-    for colId in getOrderedColumnDependencies(updatedCell):
+    for colId in getOrderedColumnDependencies(updatedCell, columns):
         if not shouldContinue:
             break
         for dep in columns[colId].dependencies:
@@ -69,17 +73,9 @@ def runWorkflowForRow(updatedCell):
         else:
             rowData[colId] = Cell(colId, columns[colId].message, API_RESULT)
         
-        loadingStatusSet = setLoadingStatus(colId)
+        loadingStatusSet = setLoadingStatus(colId, rowData, columns)
         
         if loadingStatusSet:
-            refreshUI()
-            uiRefreshed = True
+            refreshUI(rowData, columns)
 
-    refreshUI()
-
-if __name__ == "__main__":
-    rowData = {}
-
-    runWorkflowForRow(Cell(1, "Kareem"))
-    runWorkflowForRow(Cell(2, "Amin"))
-    runWorkflowForRow(Cell(3, "Clay"))
+    refreshUI(rowData, columns)
