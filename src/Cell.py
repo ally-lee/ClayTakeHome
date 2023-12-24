@@ -1,8 +1,7 @@
 class Cell:
-    def __init__(self, colId, display, apiResult=None):
+    def __init__(self, colId, value):
         self.colId = colId
-        self.display = display
-        self.apiResult = apiResult
+        self.value = value
 
     def __repr__(self):
-        return self.display
+        return self.value
