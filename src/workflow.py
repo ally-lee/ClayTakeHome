@@ -1,10 +1,7 @@
 from ColumnType import ColumnType
 from Cell import Cell
 from tabulate import tabulate
-from columns import columns
-
-API_RESULT = "https://www.linkedin.com/in/kareemamin/"
-rowData = {}
+from constants import columns, API_RESULT
 
 def refreshUI():
     colValues = []
@@ -36,31 +33,34 @@ def getOrderedColumnDependencies(updatedCell):
                 break
     return orderedDependencies
 
-# set to loading any cells that directly depend on current cell
+# set to loading any API cells that directly depend on current cell
 def setLoadingStatus(currColId):
+    loadingStatusSet = False
     for colId in columns:
-        if currColId in columns[colId].dependencies:
+        if columns[colId].type == ColumnType.API and currColId in columns[colId].dependencies:
             rowData[colId] = Cell(colId, "LOADING")
+            loadingStatusSet = True
+    return loadingStatusSet
 
 def runWorkflowForRow(updatedCell):
     rowData[updatedCell.colId] = updatedCell
     shouldContinue = True
-    changesToOtherCells = False
     for colId in getOrderedColumnDependencies(updatedCell):
         if not shouldContinue:
             break
-        if columns[colId].type == ColumnType.BASIC:
-            continue
         for dep in columns[colId].dependencies:
-            if dep not in rowData:
+            if not isinstance(dep, str) and dep not in rowData:
                 shouldContinue = False
                 break
         if not shouldContinue:
             break
+
         if columns[colId].type == ColumnType.FORMULA:
             stringsToConcatenate = []
             for dep in columns[colId].dependencies:
-                if rowData[dep].apiResult:
+                if isinstance(dep, str):
+                    stringsToConcatenate.append(dep)
+                elif rowData[dep].apiResult:
                     stringsToConcatenate.append(rowData[dep].apiResult)
                 else:
                     stringsToConcatenate.append(rowData[dep].display)
@@ -69,14 +69,17 @@ def runWorkflowForRow(updatedCell):
         else:
             rowData[colId] = Cell(colId, columns[colId].message, API_RESULT)
         
-        setLoadingStatus(colId)
+        loadingStatusSet = setLoadingStatus(colId)
         
-        changesToOtherCells = True
-        refreshUI()
-    
-    if not changesToOtherCells:
-        refreshUI()
+        if loadingStatusSet:
+            refreshUI()
+            uiRefreshed = True
 
-runWorkflowForRow(Cell(1, "Kareem"))
-runWorkflowForRow(Cell(2, "Amin"))
-runWorkflowForRow(Cell(3, "Clay"))
+    refreshUI()
+
+if __name__ == "__main__":
+    rowData = {}
+
+    runWorkflowForRow(Cell(1, "Kareem"))
+    runWorkflowForRow(Cell(2, "Amin"))
+    runWorkflowForRow(Cell(3, "Clay"))
