@@ -23,6 +23,8 @@ def refreshUI(rowData, columns):
     print(tabulate([rowValues], headers=colValues))
     print()
 
+# note that we're not doing a full BFS because we're assuming that
+# each cell can only have 1 cell that directly depends on it
 def getOrderedColumnDependencies(updatedCell, columns):
     currColId = updatedCell.colId
     orderedDependencies = []
